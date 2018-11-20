@@ -107,7 +107,7 @@ void configure_UART()
 	UARTClockSourceSet(UART0_BASE, UART_CLOCK_PIOSC);
 	
 	// Initialize the UART for console I/O
-	UARTStdioConfig(0, 115200, 16000000);
+	UARTStdioConfig(0, 9600, 16000000);
 }
 
 void configure_ADC()
@@ -150,8 +150,8 @@ void main(void)
 		// Read the value from the ADC.
 		ADCSequenceDataGet(ADC0_BASE, 3, &dataReading);
 		
-		UARTprintf("Val: %i\n", dataReading);
+		UARTprintf("%i\n", dataReading);
 		
-		SysCtlDelay(SysCtlClockGet() / 3);
+		SysCtlDelay((SysCtlClockGet() / 3) / 1000);
 	}
 }
