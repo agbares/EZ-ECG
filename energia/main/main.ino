@@ -92,83 +92,21 @@ LiquidCrystal lcd(7, 2, 14, 3, 4, 19, 38);
 //}
 
 // make some custom characters:
-byte pixel0[8] {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000
-};
 
-byte pixel1[8] {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000
-};
-
-byte pixel2[8] {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000
-};
-
-byte pixel3[8] {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000
-};
-
-byte pixel4[8] {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000
-};
-
-byte pixel5[8] {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000
-};
+byte pixel[16][9];
 
 void setup() {
   // set up the lcd's number of columns and rows: 
   lcd.begin(16, 2);
-  // Print a message to the lcd.
-  lcd.print("I "); 
-//  lcd.write(0);
-  lcd.print(" Arduino! ");
-//  lcd.write(1);
   pinMode(A1, INPUT);
-
   Serial.begin(9600);
+
+
+  for (int i = 0; i < 16; i++) {
+    for (int j = 0; j < 8; j++) {
+      pixel[i][j] = 0b00000;
+    }
+  }
 }
 
 void loop() {
@@ -183,66 +121,100 @@ void loop() {
 //  lcd.createChar(1, chars);
 //  delay(100);
 //  lcd.write(1);
-  draw(value);
+//  draw(value);
+
+  for (int i = 0; i < 8; i++)
+    draw(i);
+  
 }
 
-//void loop() {
-//  // start the Thumbs Up part:
-//  thumbsup();
-//}     
-//
 byte chars[8] = {0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};
+
 void draw(int val) {
+  int _delay = 50;
 
-
-  int max = 7;
-
-//  for (int i = 0; i < 5; i++) {
-//    for (int j = map(val, 0, 7, 7, 0); j <= max; j++) {
-//      bitSet(chars[j], i);  
-//      lcd.createChar(1, chars);
-//      lcd.setCursor(4,1);
-//      lcd.write(1);
-//    }
-//
-//  }
-  
-  shiftPixel(val, chars, chars, true);
-  lcd.createChar(1, chars);
-  lcd.setCursor(4, 1);
+  val = shiftPixel(val, pixel[0]);
+  lcd.createChar(1, pixel[0]);
+  lcd.setCursor(0, 1);
   lcd.write(1);
+
+  val = shiftPixel(val, pixel[1]);
+  lcd.createChar(2, pixel[1]);
+  lcd.setCursor(1, 1);
+  lcd.write(2);
+
+  val = shiftPixel(val, pixel[2]);
+  lcd.createChar(3, pixel[2]);
+  lcd.setCursor(2, 1);
+  lcd.write(3);
+
+  val = shiftPixel(val, pixel[3]);
+  lcd.createChar(4, pixel[3]);
+  lcd.setCursor(3, 1);
+  lcd.write(4);
+
+  val = shiftPixel(val, pixel[4]);
+  lcd.createChar(5, pixel[4]);
+  lcd.setCursor(4, 1);
+  lcd.write(5);
+
+  val = shiftPixel(val, pixel[5]);
+  lcd.createChar(6, pixel[5]);
+  lcd.setCursor(5, 1);
+  lcd.write(6);
   
-//  Serial.println(chars[val]);
+  val = shiftPixel(val, pixel[6]);
+  lcd.createChar(7, pixel[6]);
+  lcd.setCursor(6, 1);
+  lcd.write(7);
+  
+//  for (int i = 0; i < 16; i++) {
+//    val = shiftPixel(val, pixel[i]);
+//    Serial.println(val);
+//    lcd.createChar(1, pixel[i]);
+//    lcd.setCursor(i, 1);
+//    lcd.write(1);
+//  }
 
-
-  delay(50);
+  delay(_delay);
 }
 
-void shiftPixel(int val, byte pixel[], byte previousPixel[], bool isLast) {
+int shiftPixel(int val, byte pixel[]) {
   byte originalPixel[8];
 
+  // Copy the pixel
   for (int i = 0; i < 8; i++) {
     originalPixel[i] = pixel[i];
   }
 
+  // Shift current pixel to the right
   for (int i = 0; i < 8; i++) {
-    pixel[i] = pixel[i] << 1;
+    pixel[i] = pixel[i] >> 1;
   }
-  
-  // Set previousPixel
-  if (!isLast) {
-    for (int i = 0; i < 8; i++) {
-      bitWrite(previousPixel[i], 0, bitRead(originalPixel[i], 4));
+
+
+  // Clear the left col of the pixel
+  for (int i = 0; i < 9; i++) {
+    bitClear(pixel[i], 4);
+  }
+
+  // Set the left col of the pixel according to the val
+  for (int i = map(val, 0, 7, 8, 0); i <= 7; i++) {
+    bitSet(pixel[i], 4);
+  }
+
+  int nextVal = 0;
+  bool valFound = false;
+  while (!valFound && nextVal < 8) {
+    if (bitRead(originalPixel[nextVal], 0)) {
+      valFound = true;
     }
+    nextVal++; 
   }
 
+  nextVal--;
 
-  for (int i = 0; i < 8; i++) {
-    bitClear(pixel[i], 0);
-  }
-
-  for (int i = map(val, 0, 7, 7, 0); i <= 7; i++) {
-    bitSet(pixel[i], 0);
-  }
-  
+  nextVal = map(nextVal, 0, 7, 8, 0);
+  Serial.println(nextVal);
+  return nextVal;
 }
